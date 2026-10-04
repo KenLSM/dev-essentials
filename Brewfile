@@ -18,3 +18,18 @@ brew "bat"
 
 # GitHub from the command line
 brew "gh"
+
+# Jump to frequently used directories
+brew "zoxide"
+
+# Modern ls with colours, git status, and tree view
+brew "eza"
+
+# Short, example-first help pages (provides the tldr command)
+brew "tlrc"
+
+# jq-style processor for YAML, JSON, XML, and more
+brew "yq"
+
+# Command-line benchmarking
+brew "hyperfine"

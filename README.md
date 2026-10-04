@@ -1,50 +1,53 @@
 # Dev Essentials for macOS
 
 A small, opinionated set of command-line tools that make searching, filtering,
-and exploring code faster. This guide assumes you are using macOS and already
-have [Homebrew](https://brew.sh/) installed.
+and exploring code faster. This guide assumes you are using macOS. The installer
+sets up [Homebrew](https://brew.sh/) for you if it is missing.
 
 ## Install everything
 
-Run the installer with one command. It installs Homebrew if needed, installs
-every tool in the `Brewfile`, enables fzf's key bindings in `~/.zshrc`, and
-finishes with a summary of each installed tool, its version, and a link to its
-documentation:
+Run the installer with one command:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/KenLSM/dev-essentials/master/install.sh | bash
 ```
 
-To leave `~/.zshrc` untouched, pass `DEV_ESSENTIALS_SKIP_ZSHRC=1`:
+It installs Homebrew if needed, installs every tool in the `Brewfile`, adds
+[shell integration](#shell-integration) to `~/.zshrc`, and finishes with a
+summary of each installed tool, its version, and a link to its documentation.
+Rerunning it is safe: it upgrades outdated tools and rewrites its
+own `~/.zshrc` block in place.
+
+To install the tools without touching `~/.zshrc`:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/KenLSM/dev-essentials/master/install.sh | DEV_ESSENTIALS_SKIP_ZSHRC=1 bash
 ```
 
-Or clone this repository, change into it, and let Homebrew install the tools in
-the included `Brewfile`:
+Or clone this repository and let Homebrew install the `Brewfile` directly:
 
 ```sh
 brew bundle
 ```
 
-Alternatively, install them directly:
+## Shell integration
 
-```sh
-brew install ripgrep fzf jq ast-grep fd bat gh
-```
+The installer adds one block to `~/.zshrc`, between
+`# >>> dev-essentials >>>` and `# <<< dev-essentials <<<`. It backs up the
+previous file to `~/.zshrc.dev-essentials.bak` first. The block:
 
-Verify the installation:
+- **Lists files with `fd` in fzf**, so `Ctrl-T` and `Alt-C` respect
+  `.gitignore` and skip `node_modules`, build output, and `.git`.
+- **Adds previews to fzf**: `Ctrl-T` shows the file with `bat`, and `Alt-C`
+  shows the directory as an `eza` tree.
+- **Enables fzf key bindings**: `Ctrl-T` inserts a file path, `Ctrl-R` searches
+  history, and `Alt-C` changes into a directory.
+- **Colourises man pages with `bat`** by setting `MANPAGER`.
+- **Enables zoxide**, which provides the `z` and `zi` commands.
 
-```sh
-rg --version
-fzf --version
-jq --version
-ast-grep --version
-fd --version
-bat --version
-gh --version
-```
+Any of these you already configure yourself (for example, an existing
+`MANPAGER` or `zoxide init` line) is left out of the block. To remove the
+integration, delete the block and restart your shell.
 
 ## The toolkit
 
@@ -80,8 +83,8 @@ rg --line-number "TODO" | fzf
 fzf --preview 'bat --color=always --style=numbers --line-range=:200 {}'
 ```
 
-Enable fzf's key bindings and shell completion in Zsh by adding this to
-`~/.zshrc`:
+The installer enables fzf's key bindings and shell completion for you. To set
+them up by hand instead, add this to `~/.zshrc`:
 
 ```sh
 source <(fzf --zsh)
@@ -153,6 +156,86 @@ bat --line-range 40:80 src/main.ts
 
 # Produce plain output that is safe to pipe
 bat --plain --color=never README.md | head
+```
+
+### `zoxide` — jump to directories you use
+
+[zoxide](https://github.com/ajeetdsouza/zoxide) remembers the directories you
+visit and ranks them by frequency and recency, so a few letters are enough to
+get back to one.
+
+```sh
+# Jump to the best match for "dev"
+z dev
+
+# Match several words in order, such as ~/Projects/dev-essentials
+z proj ess
+
+# Choose from matching directories interactively with fzf
+zi
+```
+
+### `eza` — list files with more context
+
+[eza](https://eza.rocks) is an `ls` replacement with colours, Git status, and a
+built-in tree view.
+
+```sh
+# Long listing with Git status for each file
+eza --long --git
+
+# Tree view, two levels deep, ignoring files Git ignores
+eza --tree --level=2 --git-ignore
+
+# Sort by modification time, newest last
+eza --long --sort=modified
+```
+
+### `tldr` — read short, practical help pages
+
+[tldr](https://tldr.sh/) shows the most common ways to use a command, with
+examples, instead of the full manual. It is installed through
+[tlrc](https://tldr.sh/tlrc/), the official client.
+
+```sh
+tldr tar
+tldr git rebase
+
+# Refresh the page cache
+tldr --update
+```
+
+### `yq` — query and edit YAML
+
+[yq](https://github.com/mikefarah/yq) uses jq-like syntax for YAML, and also
+reads JSON, XML, CSV, and TOML. It is handy for Kubernetes manifests, GitHub
+Actions workflows, and Compose files.
+
+```sh
+# Read one value
+yq '.services.web.image' compose.yaml
+
+# List the keys of a map
+yq '.services | keys' compose.yaml
+
+# Edit a file in place
+yq --inplace '.image.tag = "v2"' values.yaml
+
+# Convert YAML to JSON
+yq --output-format=json . config.yaml
+```
+
+### `hyperfine` — benchmark commands
+
+[hyperfine](https://github.com/sharkdp/hyperfine) runs commands repeatedly and
+reports the mean, spread, and relative speed.
+
+```sh
+# Compare two commands
+hyperfine 'rg TODO' 'grep -r TODO .'
+
+# Warm the file cache first and export the results
+hyperfine --warmup 3 --export-markdown results.md 'npm run build'
 ```
 
 ### `gh` — work with GitHub from the terminal

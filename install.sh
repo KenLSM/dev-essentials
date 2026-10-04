@@ -50,15 +50,78 @@ done < <(brew bundle list --file="$brewfile" --formula)
 info "Installing: ${tools[*]}"
 brew bundle install --file="$brewfile"
 
-# Enable fzf key bindings and completion in Zsh.
-if [[ "${DEV_ESSENTIALS_SKIP_ZSHRC:-}" != "1" ]]; then
-  zshrc="${ZDOTDIR:-$HOME}/.zshrc"
-  if [[ -f "$zshrc" ]] && grep -qF "$FZF_LINE" "$zshrc"; then
-    info "fzf already enabled in $zshrc"
-  else
-    info "Enabling fzf key bindings in $zshrc"
-    printf '\n# fzf key bindings and completion\n%s\n' "$FZF_LINE" >> "$zshrc"
+# Add shell integration to ~/.zshrc inside a marked block. The block is
+# rewritten on every run, and any setting the user already configures outside
+# it is left alone.
+configure_zsh() {
+  local zshrc="${ZDOTDIR:-$HOME}/.zshrc"
+  local start="# >>> dev-essentials >>>"
+  local end="# <<< dev-essentials <<<"
+  local rest block tmp
+
+  touch "$zshrc"
+  rest="$(awk -v s="$start" -v e="$end" '$0 == s {skip=1} !skip {print} $0 == e {skip=0}' "$zshrc")"
+
+  # True if an uncommented line outside our block matches the pattern.
+  user_sets() { grep -qE "^[^#]*($1)" <<<"$rest"; }
+
+  block="$start"$'\n'"# Managed by $REPO_URL — rerun the installer to update."
+
+  if ! user_sets 'FZF_DEFAULT_COMMAND'; then
+    block+=$'\n\n# fzf: list files with fd so .gitignore is respected\n'
+    block+=$(cat <<'EOF'
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND='fd --type d --hidden --exclude .git'
+EOF
+)
   fi
+
+  if ! user_sets 'FZF_CTRL_T_OPTS|FZF_ALT_C_OPTS'; then
+    block+=$'\n\n# fzf: preview files with bat and directories with eza\n'
+    block+=$(cat <<'EOF'
+export FZF_CTRL_T_OPTS="--preview 'bat --color=always --style=numbers --line-range=:200 {}'"
+export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always {} | head -200'"
+EOF
+)
+  fi
+
+  if ! user_sets 'fzf --zsh|\.fzf\.zsh|fzf/shell'; then
+    block+=$'\n\n# fzf: key bindings (Ctrl-T, Ctrl-R, Alt-C) and completion\n'
+    block+="$FZF_LINE"
+  fi
+
+  if ! user_sets 'MANPAGER'; then
+    block+=$'\n\n# Colourise man pages with bat\n'
+    block+=$(cat <<'EOF'
+export MANPAGER="sh -c 'col -bx | bat --language=man --plain'"
+EOF
+)
+  fi
+
+  if ! user_sets 'zoxide init'; then
+    block+=$'\n\n# zoxide: jump to directories with z and zi\n'
+    block+='eval "$(zoxide init zsh)"'
+  fi
+
+  block+=$'\n'"$end"
+
+  if [[ -s "$zshrc" ]]; then
+    cp "$zshrc" "$zshrc.dev-essentials.bak"
+    info "Backed up $zshrc to $zshrc.dev-essentials.bak"
+  fi
+
+  # Write through the file rather than replacing it, so symlinked dotfiles
+  # stay symlinked.
+  tmp="$(mktemp -t dev-essentials-zshrc)"
+  { [[ -n "$rest" ]] && printf '%s\n\n' "$rest"; printf '%s\n' "$block"; } >"$tmp"
+  cat "$tmp" >"$zshrc"
+  rm -f "$tmp"
+  info "Updated shell integration in $zshrc"
+}
+
+if [[ "${DEV_ESSENTIALS_SKIP_ZSHRC:-}" != "1" ]]; then
+  configure_zsh
 fi
 
 # Summarise what was installed, using Homebrew's own metadata.
