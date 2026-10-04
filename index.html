@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dev Essentials — command-line tools for macOS</title>
+  <meta name="description" content="Install ripgrep, fzf, jq, ast-grep, fd, bat, gh, zoxide, eza, tldr, yq, and hyperfine on macOS with one command.">
+  <link rel="canonical" href="https://dev.kenlsm.com/">
+  <meta property="og:title" content="Dev Essentials">
+  <meta property="og:description" content="Fast, friendly command-line tools for macOS, installed with one command.">
+  <meta property="og:url" content="https://dev.kenlsm.com/">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌘</text></svg>">
+  <style>
+    :root {
+      --bg: #fdfcf9;
+      --fg: #1f2328;
+      --muted: #5c6370;
+      --accent: #d9480f;
+      --code-bg: #1f2328;
+      --code-fg: #f6f8fa;
+      --card-bg: #ffffff;
+      --border: #e4e1da;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #16181d;
+        --fg: #e6e6e6;
+        --muted: #a0a6b1;
+        --accent: #ff8a4c;
+        --code-bg: #0b0c0f;
+        --card-bg: #1d2027;
+        --border: #2d313a;
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 52rem;
+      margin: 0 auto;
+      padding: 4rem 1.25rem 3rem;
+    }
+
+    a { color: var(--accent); }
+
+    header { text-align: center; }
+
+    .logo {
+      display: inline-grid;
+      width: 4.5rem;
+      height: 4.5rem;
+      place-items: center;
+      border-radius: 1rem;
+      background: var(--code-bg);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 1rem 0 0.25rem;
+      font-size: clamp(2.25rem, 7vw, 3.5rem);
+      letter-spacing: -0.03em;
+    }
+
+    .tagline {
+      margin: 0 auto;
+      max-width: 34rem;
+      color: var(--muted);
+      font-size: 1.15rem;
+    }
+
+    h2 {
+      margin: 3.5rem 0 1rem;
+      font-size: 1.5rem;
+      text-align: center;
+    }
+
+    .install {
+      display: flex;
+      align-items: stretch;
+      border-radius: 0.6rem;
+      background: var(--code-bg);
+      overflow: hidden;
+    }
+
+    .install pre {
+      flex: 1;
+      margin: 0;
+      padding: 1.1rem 1.25rem;
+      color: var(--code-fg);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-family: var(--mono);
+      font-size: 0.95rem;
+    }
+
+    .install pre::before {
+      content: "$ ";
+      color: var(--accent);
+      user-select: none;
+    }
+
+    .copy {
+      flex: none;
+      min-width: 5.5rem;
+      border: 0;
+      border-left: 1px solid #3a3f4b;
+      background: transparent;
+      color: var(--code-fg);
+      font: 600 0.85rem var(--sans);
+      cursor: pointer;
+    }
+
+    .copy:hover,
+    .copy:focus-visible { background: #2b3038; }
+
+    .hint {
+      margin: 0.75rem 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+      gap: 1rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .steps li,
+    .tool {
+      padding: 1.1rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 0.6rem;
+      background: var(--card-bg);
+    }
+
+    .steps strong { display: block; margin-bottom: 0.25rem; }
+    .steps span { color: var(--muted); font-size: 0.95rem; }
+
+    .tools {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+      gap: 1rem;
+    }
+
+    .tool {
+      color: inherit;
+      text-decoration: none;
+      transition: border-color 150ms ease;
+    }
+
+    .tool:hover,
+    .tool:focus-visible { border-color: var(--accent); }
+
+    .tool code {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .tool p {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .variant {
+      margin-top: 1rem;
+    }
+
+    .variant p {
+      margin: 0 0 0.5rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    footer {
+      margin-top: 4rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tool { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="logo" aria-hidden="true">&gt;_</div>
+      <h1>Dev Essentials</h1>
+      <p class="tagline">Fast, friendly command-line tools for searching, filtering, and exploring code on macOS.</p>
+    </header>
+
+    <section aria-labelledby="install-title">
+      <h2 id="install-title">Install</h2>
+      <div class="install">
+        <pre id="install-command">curl -fsSL https://dev.kenlsm.com/install.sh | bash</pre>
+        <button class="copy" type="button" data-copy="install-command">Copy</button>
+      </div>
+      <p class="hint">Paste that into a macOS Terminal. Run it again at any time to update.</p>
+
+      <div class="variant">
+        <p>To install the tools without changing <code>~/.zshrc</code>:</p>
+        <div class="install">
+          <pre id="install-command-skip">curl -fsSL https://dev.kenlsm.com/install.sh | DEV_ESSENTIALS_SKIP_ZSHRC=1 bash</pre>
+          <button class="copy" type="button" data-copy="install-command-skip">Copy</button>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="what-title">
+      <h2 id="what-title">What does it do?</h2>
+      <ol class="steps">
+        <li><strong>Installs Homebrew</strong><span>Only if it is missing.</span></li>
+        <li><strong>Installs the tools</strong><span>Everything in the <a href="Brewfile">Brewfile</a>, skipping what you already have.</span></li>
+        <li><strong>Sets up Zsh</strong><span>fzf uses fd with bat and eza previews, man pages use bat, and zoxide is enabled. Your <code>~/.zshrc</code> is backed up first.</span></li>
+        <li><strong>Shows a summary</strong><span>What was installed, what you already had, and where to read more.</span></li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="tools-title">
+      <h2 id="tools-title">The tools</h2>
+      <div class="tools" id="tools">
+        <noscript><p>See the <a href="Brewfile">Brewfile</a> for the full list.</p></noscript>
+      </div>
+      <p class="hint">Examples for every tool are in the <a href="https://github.com/KenLSM/dev-essentials#the-toolkit">guide</a>.</p>
+    </section>
+
+    <footer>
+      <a href="https://github.com/KenLSM/dev-essentials">Source on GitHub</a>
+      · <a href="install.sh">View the install script</a>
+      · Made by <a href="https://kenlsm.com/">Ken Lee</a>
+    </footer>
+  </main>
+
+  <script>
+    // Build the tool list from the Brewfile so the page always matches what
+    // the installer installs. Each formula is preceded by a comment that
+    // describes it.
+    const commandNames = { ripgrep: "rg", tlrc: "tldr" };
+
+    fetch("Brewfile")
+      .then(response => response.ok ? response.text() : Promise.reject(response.status))
+      .then(text => {
+        const container = document.getElementById("tools");
+        let description = "";
+
+        for (const line of text.split("\n")) {
+          const comment = line.match(/^#\s*(.+)/);
+          const formula = line.match(/^brew\s+"([^"]+)"/);
+
+          if (comment) {
+            description = comment[1];
+          } else if (formula) {
+            const name = formula[1];
+            const card = document.createElement("a");
+            card.className = "tool";
+            card.href = `https://formulae.brew.sh/formula/${encodeURIComponent(name)}`;
+
+            const code = document.createElement("code");
+            code.textContent = commandNames[name] || name;
+            const text = document.createElement("p");
+            text.textContent = description;
+
+            card.append(code, text);
+            container.append(card);
+            description = "";
+          }
+        }
+      })
+      .catch(() => {
+        document.getElementById("tools").innerHTML =
+          '<p>See the <a href="Brewfile">Brewfile</a> for the full list.</p>';
+      });
+
+    for (const button of document.querySelectorAll("[data-copy]")) {
+      button.addEventListener("click", async () => {
+        const command = document.getElementById(button.dataset.copy).textContent;
+        try {
+          await navigator.clipboard.writeText(command);
+          button.textContent = "Copied!";
+        } catch {
+          button.textContent = "Press ⌘C";
+          getSelection().selectAllChildren(document.getElementById(button.dataset.copy));
+        }
+        setTimeout(() => { button.textContent = "Copy"; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

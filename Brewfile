@@ -25,7 +25,7 @@ brew "zoxide"
 # Modern ls with colours, git status, and tree view
 brew "eza"
 
-# Short, example-first help pages (provides the tldr command)
+# Short, example-first help pages
 brew "tlrc"
 
 # jq-style processor for YAML, JSON, XML, and more
