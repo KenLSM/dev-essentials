@@ -47,7 +47,23 @@ while IFS= read -r tool; do
   tools+=("$tool")
 done < <(brew bundle list --file="$brewfile" --formula)
 
-info "Installing: ${tools[*]}"
+# Split the tools into those already present and those this run installs.
+installed_formulae="$(brew list --formula -1)"
+new_tools=()
+existing_tools=()
+for tool in "${tools[@]}"; do
+  if grep -qxF "$tool" <<<"$installed_formulae"; then
+    existing_tools+=("$tool")
+  else
+    new_tools+=("$tool")
+  fi
+done
+
+if ((${#new_tools[@]})); then
+  info "Installing: ${new_tools[*]}"
+else
+  info "All tools are already installed; checking for updates"
+fi
 brew bundle install --file="$brewfile"
 
 # Add shell integration to ~/.zshrc inside a marked block. The block is
@@ -124,15 +140,28 @@ if [[ "${DEV_ESSENTIALS_SKIP_ZSHRC:-}" != "1" ]]; then
   configure_zsh
 fi
 
-# Summarise what was installed, using Homebrew's own metadata.
-printf '\n'
-info "Installed tools:"
-printf '\n'
-brew info --json=v2 --formula "${tools[@]}" | jq -r '
-  .formulae[]
-  | "  \u001b[1m\(.name)\u001b[0m \(.installed[0].version // "?")\n"
-  + "    \(.desc)\n"
-  + "    \(.homepage)\n"'
+# Summarise the run, using Homebrew's own metadata.
+if ((${#new_tools[@]})); then
+  printf '\n'
+  info "Newly installed:"
+  printf '\n'
+  brew info --json=v2 --formula "${new_tools[@]}" | jq -r '
+    .formulae[]
+    | "  \u001b[1m\(.name)\u001b[0m \(.installed[0].version // "?")\n"
+    + "    \(.desc)\n"
+    + "    \(.homepage)\n"'
+fi
+
+if ((${#existing_tools[@]})); then
+  # The newly installed list already ends with a blank line.
+  ((${#new_tools[@]})) || printf '\n'
+  info "Already installed (updated if a newer version was available):"
+  printf '\n'
+  brew info --json=v2 --formula "${existing_tools[@]}" | jq -r '
+    .formulae[]
+    | "  \u001b[1m\(.name)\u001b[0m \(.installed[0].version // "?") — \(.homepage)"'
+  printf '\n'
+fi
 
 info "Examples and tips for every tool: $REPO_URL#the-toolkit"
 info "Done. Restart your shell or run: source ~/.zshrc"
