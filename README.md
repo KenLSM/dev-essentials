@@ -7,7 +7,9 @@ have [Homebrew](https://brew.sh/) installed.
 ## Install everything
 
 Run the installer with one command. It installs Homebrew if needed, installs
-every tool below, and enables fzf's key bindings in `~/.zshrc`:
+every tool in the `Brewfile`, enables fzf's key bindings in `~/.zshrc`, and
+finishes with a summary of each installed tool, its version, and a link to its
+documentation:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/KenLSM/dev-essentials/master/install.sh | bash
@@ -29,7 +31,7 @@ brew bundle
 Alternatively, install them directly:
 
 ```sh
-brew install ripgrep fzf jq ast-grep fd bat
+brew install ripgrep fzf jq ast-grep fd bat gh
 ```
 
 Verify the installation:
@@ -41,6 +43,7 @@ jq --version
 ast-grep --version
 fd --version
 bat --version
+gh --version
 ```
 
 ## The toolkit
@@ -152,6 +155,25 @@ bat --line-range 40:80 src/main.ts
 bat --plain --color=never README.md | head
 ```
 
+### `gh` — work with GitHub from the terminal
+
+[GitHub CLI](https://cli.github.com/) brings pull requests, issues, Actions
+runs, and repositories to the command line. Sign in once with `gh auth login`.
+
+```sh
+# Create a pull request for the current branch
+gh pr create --fill
+
+# Check out a pull request locally to review it
+gh pr checkout 123
+
+# Watch the CI run for the current branch
+gh run watch
+
+# Open the current repository in the browser
+gh browse
+```
+
 ## Useful combinations
 
 The tools become more useful when composed:
@@ -162,6 +184,9 @@ ${EDITOR:-vim} "$(fd --type f | fzf)"
 
 # Select a JSON file and pretty-print it
 fd --extension json | fzf | xargs jq .
+
+# Pick one of your open pull requests and check it out
+gh pr list --author @me | fzf | awk '{print $1}' | xargs gh pr checkout
 
 # Preview search results in context
 rg --line-number --no-heading "TODO" | fzf --delimiter : \

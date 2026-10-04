@@ -8,11 +8,11 @@
 
 set -euo pipefail
 
-TOOLS=(ripgrep fzf jq ast-grep fd bat)
+REPO_URL="https://github.com/KenLSM/dev-essentials"
+RAW_URL="https://raw.githubusercontent.com/KenLSM/dev-essentials/master"
 FZF_LINE='source <(fzf --zsh)'
 
 info() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
-warn() { printf '\033[1;33mWarning:\033[0m %s\n' "$*" >&2; }
 fail() { printf '\033[1;31mError:\033[0m %s\n' "$*" >&2; exit 1; }
 
 [[ "$(uname -s)" == "Darwin" ]] || fail "This installer only supports macOS."
@@ -31,8 +31,24 @@ if ! command -v brew >/dev/null 2>&1; then
   command -v brew >/dev/null 2>&1 || fail "Homebrew installation did not put brew on PATH."
 fi
 
-info "Installing: ${TOOLS[*]}"
-brew install "${TOOLS[@]}"
+# Use the Brewfile next to this script when run from a clone; otherwise
+# download it. Either way, the Brewfile is the single list of tools.
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-.}")" && pwd)"
+if [[ -f "$script_dir/Brewfile" && -f "$script_dir/install.sh" ]]; then
+  brewfile="$script_dir/Brewfile"
+else
+  brewfile="$(mktemp -t dev-essentials-brewfile)"
+  trap 'rm -f "$brewfile"' EXIT
+  curl -fsSL "$RAW_URL/Brewfile" -o "$brewfile" || fail "Could not download the Brewfile."
+fi
+
+tools=()
+while IFS= read -r tool; do
+  tools+=("$tool")
+done < <(brew bundle list --file="$brewfile" --formula)
+
+info "Installing: ${tools[*]}"
+brew bundle install --file="$brewfile"
 
 # Enable fzf key bindings and completion in Zsh.
 if [[ "${DEV_ESSENTIALS_SKIP_ZSHRC:-}" != "1" ]]; then
@@ -45,12 +61,15 @@ if [[ "${DEV_ESSENTIALS_SKIP_ZSHRC:-}" != "1" ]]; then
   fi
 fi
 
-info "Installed versions:"
-rg --version | head -n 1
-fzf --version
-jq --version
-ast-grep --version
-fd --version
-bat --version
+# Summarise what was installed, using Homebrew's own metadata.
+printf '\n'
+info "Installed tools:"
+printf '\n'
+brew info --json=v2 --formula "${tools[@]}" | jq -r '
+  .formulae[]
+  | "  \u001b[1m\(.name)\u001b[0m \(.installed[0].version // "?")\n"
+  + "    \(.desc)\n"
+  + "    \(.homepage)\n"'
 
+info "Examples and tips for every tool: $REPO_URL#the-toolkit"
 info "Done. Restart your shell or run: source ~/.zshrc"

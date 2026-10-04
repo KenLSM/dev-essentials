@@ -15,3 +15,6 @@ brew "fd"
 
 # Syntax-highlighting file viewer
 brew "bat"
+
+# GitHub from the command line
+brew "gh"
