@@ -2,7 +2,7 @@
 #
 # Install the dev essentials toolkit on macOS.
 #
-#   curl -fsSL https://raw.githubusercontent.com/KenLSM/dev-essentials/master/install.sh | bash
+#   curl -fsSL https://dev.kenlsm.com/install.sh | bash
 #
 # Set DEV_ESSENTIALS_SKIP_ZSHRC=1 to leave ~/.zshrc untouched.
 

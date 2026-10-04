@@ -1,5 +1,7 @@
 # Dev Essentials for macOS
 
+**[dev.kenlsm.com](https://dev.kenlsm.com/)**
+
 A small, opinionated set of command-line tools that make searching, filtering,
 and exploring code faster. This guide assumes you are using macOS. The installer
 sets up [Homebrew](https://brew.sh/) for you if it is missing.
@@ -9,7 +11,7 @@ sets up [Homebrew](https://brew.sh/) for you if it is missing.
 Run the installer with one command:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/KenLSM/dev-essentials/master/install.sh | bash
+curl -fsSL https://dev.kenlsm.com/install.sh | bash
 ```
 
 It installs Homebrew if needed, installs every tool in the `Brewfile`, adds
@@ -21,7 +23,7 @@ own `~/.zshrc` block in place.
 To install the tools without touching `~/.zshrc`:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/KenLSM/dev-essentials/master/install.sh | DEV_ESSENTIALS_SKIP_ZSHRC=1 bash
+curl -fsSL https://dev.kenlsm.com/install.sh | DEV_ESSENTIALS_SKIP_ZSHRC=1 bash
 ```
 
 Or clone this repository and let Homebrew install the `Brewfile` directly:
