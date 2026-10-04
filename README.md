@@ -6,7 +6,20 @@ have [Homebrew](https://brew.sh/) installed.
 
 ## Install everything
 
-Clone this repository, change into it, and let Homebrew install the tools in
+Run the installer with one command. It installs Homebrew if needed, installs
+every tool below, and enables fzf's key bindings in `~/.zshrc`:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/KenLSM/dev-essentials/master/install.sh | bash
+```
+
+To leave `~/.zshrc` untouched, pass `DEV_ESSENTIALS_SKIP_ZSHRC=1`:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/KenLSM/dev-essentials/master/install.sh | DEV_ESSENTIALS_SKIP_ZSHRC=1 bash
+```
+
+Or clone this repository, change into it, and let Homebrew install the tools in
 the included `Brewfile`:
 
 ```sh
